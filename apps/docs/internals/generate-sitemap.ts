@@ -9,11 +9,15 @@ import matter from 'gray-matter'
 import prettier from 'prettier'
 
 import { generateReferencePages } from './files/reference-lib'
+import { checkGuidePageEnabled } from '~/features/docs/NavigationPageStatus.utils'
 
 async function generate() {
   const referencePages = await generateReferencePages()
 
-  const contentFiles = await globby(['content/guides/**/!(_)*.mdx'])
+  // a guide that the nav disables returns 404, so the sitemap does not list it
+  const contentFiles = (await globby(['content/guides/**/!(_)*.mdx'])).filter((filePath) =>
+    checkGuidePageEnabled(filePath.replace(/^content/, '').replace(/(\/index)?\.mdx$/, ''))
+  )
   const contentPages = await Promise.all(
     contentFiles.map(async (filePath) => {
       const fileContents = await fs.promises.readFile(filePath, 'utf8')
