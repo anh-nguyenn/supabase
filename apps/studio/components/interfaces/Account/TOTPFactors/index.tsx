@@ -196,7 +196,7 @@ export const TOTPFactors = () => {
               <AlertError subject="Failed to load recovery codes" error={recoveryCodesError} />
             )}
             {canShowRecoveryCodes && status === 'unenrolled' && (
-              <RecoveryCodesSetup finding={codeFinding} isPrimary={isCodeActionPrimary} />
+              <RecoveryCodesSetup isPrimary={isCodeActionPrimary} />
             )}
             {canShowRecoveryCodes && status === 'available' && codes && (
               <RecoveryCodesAvailable

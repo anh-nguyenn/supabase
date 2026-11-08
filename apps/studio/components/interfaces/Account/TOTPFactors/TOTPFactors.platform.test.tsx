@@ -147,9 +147,9 @@ describe('account security MFA and recovery sections', () => {
       )
     )
     renderSection()
-    expect(await screen.findByText('No recovery codes')).toBeInTheDocument()
+    expect(await screen.findByText('Set up recovery codes')).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'Generate recovery codes' })).toHaveLength(1)
-    expect(screen.getByText('Set up recovery codes')).toBeInTheDocument()
+    expect(screen.queryByText('No recovery codes')).not.toBeInTheDocument()
     expect(screen.queryByText('Add a backup MFA method')).not.toBeInTheDocument()
   })
 
