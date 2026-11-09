@@ -255,7 +255,7 @@ describe('account security MFA and recovery sections', () => {
   it('shows a backup warning with one authenticator action', async () => {
     renderSection()
     expect(await screen.findByText('Add a backup MFA method')).toBeInTheDocument()
-    expect(await screen.findAllByRole('button', { name: 'Add another method' })).toHaveLength(1)
+    expect(await screen.findAllByRole('button', { name: 'Add MFA method' })).toHaveLength(1)
     expect(
       await screen.findByRole('button', { name: 'Remove MFA method: Phone' })
     ).toBeInTheDocument()
@@ -266,7 +266,7 @@ describe('account security MFA and recovery sections', () => {
     renderSection()
     expect(await screen.findByText('10 of 10 recovery codes available')).toBeInTheDocument()
     expect(screen.queryByText('Set up multi-factor authentication')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Add another method' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add MFA method' })).toBeInTheDocument()
   })
 
   it('does not treat an authenticator as the last MFA method when a verified phone factor remains', async () => {

@@ -108,7 +108,7 @@ export const TOTPFactors = () => {
                 icon={<PlusIcon />}
                 onClick={handleAddNewApp}
               >
-                Add another method
+                Add MFA method
               </Button>
             </PageSectionAside>
           )}
