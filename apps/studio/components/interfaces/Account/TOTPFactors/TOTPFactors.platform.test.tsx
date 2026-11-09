@@ -147,10 +147,49 @@ describe('account security MFA and recovery sections', () => {
       )
     )
     renderSection()
-    expect(await screen.findByText('Set up recovery codes')).toBeInTheDocument()
+    expect(await screen.findByText('No recovery codes')).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'Generate recovery codes' })).toHaveLength(1)
-    expect(screen.queryByText('No recovery codes')).not.toBeInTheDocument()
     expect(screen.queryByText('Add a backup MFA method')).not.toBeInTheDocument()
+  })
+
+  it('keeps generated recovery codes visible until they are saved, even after status refreshes', async () => {
+    let hasGenerated = false
+    mswServer.use(
+      http.get('*/auth/v1/factors/recovery-codes', () =>
+        hasGenerated
+          ? HttpResponse.json({ id: 'codes-a', type: 'recovery_code', total: 1, remaining: 1 })
+          : HttpResponse.json(
+              { code: 'mfa_factor_not_found', msg: 'Missing' },
+              { status: 404, headers: { 'X-Supabase-Api-Version': '2024-01-01' } }
+            )
+      ),
+      http.post('*/auth/v1/factors/recovery-codes', () => {
+        hasGenerated = true
+        return HttpResponse.json({
+          id: 'codes-a',
+          type: 'recovery_code',
+          total: 1,
+          codes: ['abcdefghijklmnop'],
+        })
+      })
+    )
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    renderSection('', queryClient)
+    await userEvent.click(await screen.findByRole('button', { name: 'Generate recovery codes' }))
+    const savedCheckbox = await screen.findByRole('checkbox', {
+      name: 'I have saved my recovery codes somewhere safe',
+    })
+
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: recoveryCodeKeys.status() })
+    })
+    await screen.findByText('1 of 1 recovery codes available')
+    expect(savedCheckbox).toBeInTheDocument()
+
+    await userEvent.click(savedCheckbox)
+    await userEvent.click(screen.getByRole('button', { name: 'Done' }))
+    await waitFor(() => expect(savedCheckbox).not.toBeInTheDocument())
+    expect(await screen.findByRole('button', { name: 'Regenerate' })).toBeInTheDocument()
   })
 
   it.each([1, 3])('shows a low code count of %s with a regeneration action', async (remaining) => {
@@ -167,6 +206,9 @@ describe('account security MFA and recovery sections', () => {
     renderSection()
     expect(
       await screen.findByText(`${remaining} of 10 recovery codes available`)
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(remaining === 1 ? '1 recovery code remaining' : '3 recovery codes remaining')
     ).toBeInTheDocument()
     expect(
       await screen.findByText('Generate a new set before you need them to recover your account.')
@@ -291,7 +333,6 @@ describe('account security MFA and recovery sections', () => {
     )
     renderSection()
     expect(await screen.findByText('Failed to load recovery codes')).toBeInTheDocument()
-    expect(screen.queryByText('No recovery codes')).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: 'Generate recovery codes' })
     ).not.toBeInTheDocument()

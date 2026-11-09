@@ -1,21 +1,21 @@
 import type { AuthMFARecoveryCodesStatusResponseData } from '@supabase/supabase-js'
 import { RectangleEllipsisIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { Card, CardContent } from 'ui'
 import { Admonition } from 'ui-patterns/Admonition'
 
-import { RegenerateRecoveryCodesModal } from './RegenerateRecoveryCodesModal'
 import type { AccountRecoveryFinding } from '@/lib/account-recovery/evaluate-account-recovery'
 
 interface RecoveryCodesAvailableProps {
   codes: AuthMFARecoveryCodesStatusResponseData
   finding: AccountRecoveryFinding | undefined
-  isPrimary: boolean
+  children: ReactNode
 }
 
 export const RecoveryCodesAvailable = ({
   codes,
   finding,
-  isPrimary,
+  children,
 }: RecoveryCodesAvailableProps) => {
   return (
     <>
@@ -49,7 +49,7 @@ export const RecoveryCodesAvailable = ({
               </p>
             </div>
           </div>
-          <RegenerateRecoveryCodesModal variant={isPrimary ? 'primary' : 'default'} />
+          {children}
         </CardContent>
       </Card>
     </>

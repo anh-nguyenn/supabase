@@ -14,14 +14,14 @@ export interface GenerateRecoveryCodesModalProps extends Pick<
   showSecurityLink?: boolean
 }
 
-export const GenerateRecoveryCodesModal = ({
+export const useGenerateRecoveryCodesModal = ({
   label = 'Generate recovery codes',
   variant,
   size,
   onComplete,
   onStart,
   showSecurityLink,
-}: GenerateRecoveryCodesModalProps) => {
+}: GenerateRecoveryCodesModalProps = {}) => {
   const mutation = useRecoveryCodesGenerateMutation()
   const [isOpen, setIsOpen] = useState(false)
   const handleGenerate = () => {
@@ -30,11 +30,13 @@ export const GenerateRecoveryCodesModal = ({
     mutation.mutate({})
   }
 
-  return (
-    <>
+  return {
+    trigger: (
       <Button variant={variant} size={size} onClick={handleGenerate} loading={mutation.isPending}>
         {label}
       </Button>
+    ),
+    dialog: (
       <RecoveryCodesModal
         open={isOpen}
         mutation={mutation}
@@ -44,6 +46,17 @@ export const GenerateRecoveryCodesModal = ({
           if (!open && mutation.isSuccess) onComplete?.()
         }}
       />
+    ),
+  }
+}
+
+export const GenerateRecoveryCodesModal = (props: GenerateRecoveryCodesModalProps) => {
+  const { trigger, dialog } = useGenerateRecoveryCodesModal(props)
+
+  return (
+    <>
+      {trigger}
+      {dialog}
     </>
   )
 }

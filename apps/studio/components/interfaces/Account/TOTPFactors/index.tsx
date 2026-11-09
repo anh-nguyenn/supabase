@@ -20,8 +20,10 @@ import { TimestampInfo } from 'ui-patterns/TimestampInfo'
 
 import { AddNewFactorModal } from './AddNewFactorModal'
 import { DeleteFactorModal } from './DeleteFactorModal'
+import { useGenerateRecoveryCodesModal } from './GenerateRecoveryCodesModal'
 import { RecoveryCodesAvailable } from './RecoveryCodesAvailable'
 import { RecoveryCodesSetup } from './RecoveryCodesSetup'
+import { useRegenerateRecoveryCodesModal } from './RegenerateRecoveryCodesModal'
 import { getPrimarySecurityAction } from '@/components/interfaces/Account/Security/Security.utils'
 import { AlertError } from '@/components/ui/AlertError'
 import { ButtonTooltip } from '@/components/ui/ButtonTooltip'
@@ -72,6 +74,10 @@ export const TOTPFactors = () => {
   )
   const isCodeActionPrimary =
     primaryAction === 'generate-codes' || primaryAction === 'regenerate-codes'
+
+  const codeActionVariant = isCodeActionPrimary ? 'primary' : 'default'
+  const generateCodes = useGenerateRecoveryCodesModal({ variant: codeActionVariant })
+  const regenerateCodes = useRegenerateRecoveryCodesModal({ variant: codeActionVariant })
 
   const canShowRecoveryCodes = shouldVerifyRecoveryCodes && !recoveryCodesIsError
 
@@ -196,19 +202,20 @@ export const TOTPFactors = () => {
               <AlertError subject="Failed to load recovery codes" error={recoveryCodesError} />
             )}
             {canShowRecoveryCodes && status === 'unenrolled' && (
-              <RecoveryCodesSetup isPrimary={isCodeActionPrimary} />
+              <RecoveryCodesSetup>{generateCodes.trigger}</RecoveryCodesSetup>
             )}
             {canShowRecoveryCodes && status === 'available' && codes && (
-              <RecoveryCodesAvailable
-                codes={codes}
-                finding={codeFinding}
-                isPrimary={isCodeActionPrimary}
-              />
+              <RecoveryCodesAvailable codes={codes} finding={codeFinding}>
+                {regenerateCodes.trigger}
+              </RecoveryCodesAvailable>
             )}
           </PageSectionContent>
         </PageSection>
       )}
 
+      {/* Keep open dialogs mounted when a status refresh replaces their triggers. */}
+      {generateCodes.dialog}
+      {regenerateCodes.dialog}
       <AddNewFactorModal
         visible={isAddNewFactorOpen || (securityAction === 'add-factor' && canAddApp)}
         onClose={() => {
