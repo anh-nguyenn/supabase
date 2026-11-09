@@ -20,8 +20,10 @@ import { TimestampInfo } from 'ui-patterns/TimestampInfo'
 
 import { AddNewFactorModal } from './AddNewFactorModal'
 import { DeleteFactorModal } from './DeleteFactorModal'
+import { useGenerateRecoveryCodesModal } from './GenerateRecoveryCodesModal'
 import { RecoveryCodesAvailable } from './RecoveryCodesAvailable'
 import { RecoveryCodesSetup } from './RecoveryCodesSetup'
+import { useRegenerateRecoveryCodesModal } from './RegenerateRecoveryCodesModal'
 import type { SecurityAction } from '@/components/interfaces/Account/Security/Security.utils'
 import { AlertError } from '@/components/ui/AlertError'
 import { ButtonTooltip } from '@/components/ui/ButtonTooltip'
@@ -70,6 +72,12 @@ export const TOTPFactors = ({
   const isCodeActionPrimary =
     primaryAction === 'generate-codes' || primaryAction === 'regenerate-codes'
 
+  const codeActionVariant = isCodeActionPrimary ? 'primary' : 'default'
+  const generateCodes = useGenerateRecoveryCodesModal({ variant: codeActionVariant })
+  const regenerateCodes = useRegenerateRecoveryCodesModal({ variant: codeActionVariant })
+
+  const canShowRecoveryCodes = shouldVerifyRecoveryCodes && !recoveryCodesIsError
+
   const handleAddNewApp = () => setIsAddNewFactorOpen(true)
 
   const disableDeleteFactor =
@@ -97,7 +105,7 @@ export const TOTPFactors = ({
                 icon={<PlusIcon />}
                 onClick={handleAddNewApp}
               >
-                Add another method
+                Add MFA method
               </Button>
             </PageSectionAside>
           )}
@@ -190,25 +198,21 @@ export const TOTPFactors = ({
             {recoveryCodesIsError && (
               <AlertError subject="Failed to load recovery codes" error={recoveryCodesError} />
             )}
-            <RecoveryCodesSetup
-              isVisible={
-                shouldVerifyRecoveryCodes && status === 'unenrolled' && !recoveryCodesIsError
-              }
-              finding={codeFinding}
-              isPrimary={isCodeActionPrimary}
-            />
-            <RecoveryCodesAvailable
-              isVisible={
-                shouldVerifyRecoveryCodes && status === 'available' && !recoveryCodesIsError
-              }
-              codes={codes ?? undefined}
-              finding={codeFinding}
-              isPrimary={isCodeActionPrimary}
-            />
+            {canShowRecoveryCodes && status === 'unenrolled' && (
+              <RecoveryCodesSetup>{generateCodes.trigger}</RecoveryCodesSetup>
+            )}
+            {canShowRecoveryCodes && status === 'available' && codes && (
+              <RecoveryCodesAvailable codes={codes} finding={codeFinding}>
+                {regenerateCodes.trigger}
+              </RecoveryCodesAvailable>
+            )}
           </PageSectionContent>
         </PageSection>
       )}
 
+      {/* Keep open dialogs mounted when a status refresh replaces their triggers. */}
+      {generateCodes.dialog}
+      {regenerateCodes.dialog}
       <AddNewFactorModal
         visible={isAddNewFactorOpen || (securityAction === 'add-factor' && canAddApp)}
         onClose={() => {
